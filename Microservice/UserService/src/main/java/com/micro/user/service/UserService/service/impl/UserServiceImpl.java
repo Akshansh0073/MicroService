@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.micro.user.service.UserService.External.Services.HotelService;
 import com.micro.user.service.UserService.entities.Hotel;
 import com.micro.user.service.UserService.entities.Rating;
 import com.micro.user.service.UserService.entities.User;
@@ -29,6 +30,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	@Autowired
+	private HotelService hotelService;
 
 	private Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
@@ -55,7 +59,7 @@ public class UserServiceImpl implements UserService {
 
 		// fetch rating
 		// http://localhost:8083/ratings/users/0e549073-4923-44d4-bdfd-5333f253d271
-		Rating[] ratingOfUser = restTemplate.getForObject("http://localhost:8083/ratings/users/" + userId,
+		Rating[] ratingOfUser = restTemplate.getForObject("http://RATINGSERVICE/ratings/users/" + userId,
 				Rating[].class);
 
 		List<Rating> ratings = Arrays.stream(ratingOfUser).toList();
@@ -65,14 +69,15 @@ public class UserServiceImpl implements UserService {
 		List<Rating> ratingList = ratings.stream().map(rate -> {
 
 			// http://localhost:8082/hotels/ccc4d40f-1dd0-4506-8249-e990ec0ec0f2
-			ResponseEntity<Hotel> forEntity = restTemplate
-					.getForEntity("http://localhost:8082/hotels/" + rate.getHotelId(), Hotel.class);
-			Hotel body = forEntity.getBody();
+//			ResponseEntity<Hotel> forEntity = restTemplate
+//					.getForEntity("http://HOTELSERVICE/hotels/" + rate.getHotelId(), Hotel.class);
+			
+			Hotel hotel = hotelService.getHotel(rate.getHotelId());
 
-			logger.info("response status code: {} ", forEntity.getStatusCode());
+//			logger.info("response status code: {} ", forEntity.getStatusCode());
 
 			// set hotel
-			rate.setHotel(body);
+			rate.setHotel(hotel);
 
 			// return new rating
 			return rate;
